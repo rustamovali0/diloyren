@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dil Öyrən - Supabase Database ilə</title>
+    <title>Dil Öyrən - Lokal + Supabase</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,9 +43,7 @@
             gap: 20px;
             transition: 0.3s;
         }
-        .loading-overlay.hidden {
-            display: none;
-        }
+        .loading-overlay.hidden { display: none; }
         .loader {
             width: 60px;
             height: 60px;
@@ -54,15 +52,8 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .loading-text {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: white; font-size: 1.2rem; font-weight: 500; }
         
         .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
         @media (min-width: 768px) { .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
@@ -184,7 +175,7 @@
 </div>
 
 <div class="app" id="appMain" style="display: none;">
-    <div class="hero"><p>🎯 <strong>Supabase Database ilə canlı sözlər</strong> | Söz əlavə et, hər kəs görsün!</p></div>
+    <div class="hero"><p>🎯 <strong>Lokal + Supabase</strong> | Xəta olsa belə işləyir | 150+ söz</p></div>
     
     <div class="add-word-panel">
         <h3>➕ Öz sözünü əlavə et</h3>
@@ -197,7 +188,7 @@
     </div>
     
     <div class="top-bar">
-        <div class="brand"><h1>📖 Dil Öyrən</h1><p>Supabase DB | Canlı sinxronizasiya</p></div>
+        <div class="brand"><h1>📖 Dil Öyrən</h1><p>Lokal DB | Offline də işləyir</p></div>
         <div class="level-filters" id="levelFilterContainer"></div>
         <div style="display: flex; gap: 12px; align-items: center;">
             <div class="lang-dropdown-wrapper" id="langDropdownWrapper">
@@ -217,13 +208,13 @@
     <div class="level-filters" style="justify-content: center; margin-bottom: 24px;" id="categoryFilterContainer"></div>
     <div id="cardsContainer" class="cards-grid"></div>
     <div class="pagination" id="paginationContainer"></div>
-    <div class="info-badge">✨ Kartın üzərinə klikləyin — tərcüməsi açılır | 🔊 Səsləndir | Söz əlavə et, hamı görsün!</div>
+    <div class="info-badge">✨ Kartın üzərinə klikləyin — tərcüməsi açılır | 🔊 Səsləndir | Lokal olaraq 150+ söz</div>
 </div>
 <div class="theme-toggle" id="themeToggle">🌙</div>
 <div id="welcomeOverlay" class="welcome-overlay">
     <div class="welcome-card">
         <h2>🌍 Xoş gəldiniz!</h2>
-        <p>Hansı dili öyrənmək istədiyinizi seçin. Söz əlavə edin, hamı görsün!</p>
+        <p>Hansı dili öyrənmək istədiyinizi seçin. 150+ söz sizi gözləyir!</p>
         <div class="lang-selector" id="welcomeLangSelector"></div>
         <button class="welcome-btn" id="confirmLangBtn">Başla</button>
     </div>
@@ -240,56 +231,118 @@
 </div>
 
 <script>
-    // ======================== SUPABASE KONFİQURASİYASI ========================
-    const SUPABASE_URL = "https://icwpaipqqqwjpooazmcu.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_W5rnAxonO_Sq-EnCdlFU7Q_mkmi37yJ";
-    
-    let supabase = null;
-    let dbConnected = false;
-    
-    // Loading elementləri
-    const loadingOverlay = document.getElementById("loadingOverlay");
-    
-    function showLoading() { loadingOverlay.classList.remove("hidden"); }
-    function hideLoading() { loadingOverlay.classList.add("hidden"); }
-    
-    // Supabase bağlantısını yoxla
-    if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("YOUR")) {
-        try {
-            supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            dbConnected = true;
-            console.log("✅ Supabase bağlandı!");
-        } catch(e) {
-            console.error("Supabase bağlantı xətası:", e);
-            dbConnected = false;
-        }
-    } else {
-        console.warn("⚠️ Supabase konfiqurasiya edilməyib.");
-        dbConnected = false;
-    }
-    
-    // ========== BAŞLANĞIC SÖZLƏR ==========
+    // ======================== LOKAL MƏLUMATLAR (200+ söz) ========================
+    // Bu sözlər hər zaman işləyir, Supabase xətası olsa belə
     let wordsData = [];
     let idCounter = 1;
     
+    // 150+ söz - tam siyahı
     const initialWords = [
+        // Salamlaşma (15)
         { az: "Salam", en: "Hello", en_read: "helou", level: "Basic", category: "Salamlaşma" },
         { az: "Sağ ol", en: "Goodbye", en_read: "gudbay", level: "Basic", category: "Salamlaşma" },
+        { az: "Sabahınız xeyir", en: "Good morning", en_read: "gud morninq", level: "Basic", category: "Salamlaşma" },
+        { az: "Axşamınız xeyir", en: "Good evening", en_read: "gud ivninq", level: "Basic", category: "Salamlaşma" },
+        { az: "Gecəniz xeyir", en: "Good night", en_read: "gud nayt", level: "Basic", category: "Salamlaşma" },
+        { az: "Xoş gəldiniz", en: "Welcome", en_read: "velkam", level: "Basic", category: "Salamlaşma" },
         { az: "Necəsən?", en: "How are you?", en_read: "hau ar yu", level: "Basic", category: "Salamlaşma" },
+        { az: "Görüşənədək", en: "See you", en_read: "si yu", level: "Basic", category: "Salamlaşma" },
+        { az: "Yaxşı günlər", en: "Have a nice day", en_read: "hev e nays dey", level: "Basic", category: "Salamlaşma" },
+        { az: "Uğurlar", en: "Good luck", en_read: "gud lak", level: "Basic", category: "Salamlaşma" },
+        { az: "Xoş səhər", en: "Good morning", en_read: "gud morninq", level: "Basic", category: "Salamlaşma" },
+        { az: "Xoş axşam", en: "Good evening", en_read: "gud ivninq", level: "Basic", category: "Salamlaşma" },
+        { az: "Allaha sağ ol", en: "Thank God", en_read: "senk god", level: "Basic", category: "Salamlaşma" },
+        { az: "Sağlam ol", en: "Be healthy", en_read: "bi helti", level: "Basic", category: "Salamlaşma" },
+        { az: "Buyurun", en: "Come in", en_read: "kam in", level: "Basic", category: "Salamlaşma" },
+        // Nəzakət (15)
         { az: "Təşəkkür edirəm", en: "Thank you", en_read: "senk yu", level: "Basic", category: "Nəzakət" },
+        { az: "Çox sağ ol", en: "Thanks a lot", en_read: "senks e lot", level: "Basic", category: "Nəzakət" },
+        { az: "Minnətdaram", en: "I'm grateful", en_read: "aym greytful", level: "Basic", category: "Nəzakət" },
         { az: "Bağışlayın", en: "Excuse me", en_read: "ekskyuz mi", level: "Basic", category: "Nəzakət" },
+        { az: "Üzr istəyirəm", en: "I'm sorry", en_read: "aym sori", level: "Basic", category: "Nəzakət" },
+        { az: "Xahiş edirəm", en: "Please", en_read: "pliz", level: "Basic", category: "Nəzakət" },
+        { az: "Buyurun", en: "Here you are", en_read: "hir yu ar", level: "Basic", category: "Nəzakət" },
+        { az: "Afərin", en: "Well done", en_read: "vel dan", level: "Basic", category: "Nəzakət" },
+        { az: "Əla", en: "Excellent", en_read: "ekselent", level: "Basic", category: "Nəzakət" },
+        { az: "Əla iş", en: "Good job", en_read: "gud cab", level: "Basic", category: "Nəzakət" },
+        { az: "Kömək edə bilərəm?", en: "Can I help?", en_read: "ken ay help", level: "Basic", category: "Nəzakət" },
+        { az: "Sağ olun", en: "Thanks", en_read: "senks", level: "Basic", category: "Nəzakət" },
+        { az: "Hörmətlə", en: "Respectfully", en_read: "rispektfuli", level: "Basic", category: "Nəzakət" },
+        { az: "Sayğı ilə", en: "With respect", en_read: "vid rispekt", level: "Basic", category: "Nəzakət" },
+        { az: "Zəhmət olmasa", en: "Please", en_read: "pliz", level: "Basic", category: "Nəzakət" },
+        // Əsas (30)
         { az: "Bəli", en: "Yes", en_read: "yes", level: "Basic", category: "Əsas" },
         { az: "Xeyr", en: "No", en_read: "nou", level: "Basic", category: "Əsas" },
         { az: "Yaxşı", en: "Good", en_read: "gud", level: "Basic", category: "Əsas" },
+        { az: "Pis", en: "Bad", en_read: "bad", level: "Basic", category: "Əsas" },
+        { az: "Böyük", en: "Big", en_read: "big", level: "Basic", category: "Əsas" },
+        { az: "Kiçik", en: "Small", en_read: "smol", level: "Basic", category: "Əsas" },
+        { az: "Yeni", en: "New", en_read: "nyu", level: "Basic", category: "Əsas" },
+        { az: "Köhnə", en: "Old", en_read: "old", level: "Basic", category: "Əsas" },
+        { az: "İsti", en: "Hot", en_read: "hot", level: "Basic", category: "Əsas" },
+        { az: "Soyuq", en: "Cold", en_read: "cold", level: "Basic", category: "Əsas" },
+        { az: "Tez", en: "Fast", en_read: "fast", level: "Basic", category: "Əsas" },
+        { az: "Yavaş", en: "Slow", en_read: "slou", level: "Basic", category: "Əsas" },
+        { az: "Uzun", en: "Long", en_read: "long", level: "Basic", category: "Əsas" },
+        { az: "Qısa", en: "Short", en_read: "short", level: "Basic", category: "Əsas" },
+        { az: "Gözəl", en: "Beautiful", en_read: "byutıful", level: "Basic", category: "Əsas" },
+        { az: "Çirkin", en: "Ugly", en_read: "agli", level: "Basic", category: "Əsas" },
+        { az: "Ağıllı", en: "Smart", en_read: "smart", level: "Basic", category: "Əsas" },
+        { az: "Axmaq", en: "Stupid", en_read: "stupid", level: "Basic", category: "Əsas" },
+        { az: "Cəsarətli", en: "Brave", en_read: "breyv", level: "Basic", category: "Əsas" },
+        { az: "Qorxaq", en: "Cowardly", en_read: "kavardli", level: "Basic", category: "Əsas" },
+        { az: "Səmimi", en: "Sincere", en_read: "sinsir", level: "Basic", category: "Əsas" },
+        { az: "Saxta", en: "Fake", en_read: "feyk", level: "Basic", category: "Əsas" },
+        { az: "Səxavətli", en: "Generous", en_read: "cerıras", level: "Basic", category: "Əsas" },
+        { az: "Xəsis", en: "Stingy", en_read: "stinci", level: "Basic", category: "Əsas" },
+        { az: "Səbirli", en: "Patient", en_read: "peyşnt", level: "Basic", category: "Əsas" },
+        { az: "Dözümsüz", en: "Impatient", en_read: "impeyşnt", level: "Basic", category: "Əsas" },
+        { az: "Dürüst", en: "Honest", en_read: "onıst", level: "Basic", category: "Əsas" },
+        { az: "Yalançı", en: "Liar", en_read: "layır", level: "Basic", category: "Əsas" },
+        { az: "Təvazökar", en: "Modest", en_read: "modıst", level: "Basic", category: "Əsas" },
+        { az: "Təkəbbürlü", en: "Arrogant", en_read: "erıgınt", level: "Basic", category: "Əsas" },
+        // Hərəkət felləri (20)
         { az: "Getmək", en: "Go", en_read: "gou", level: "Intermediate", category: "Hərəkət" },
         { az: "Gəlmək", en: "Come", en_read: "kam", level: "Intermediate", category: "Hərəkət" },
+        { az: "Qaçmaq", en: "Run", en_read: "ran", level: "Intermediate", category: "Hərəkət" },
+        { az: "Gəzmək", en: "Walk", en_read: "vok", level: "Intermediate", category: "Hərəkət" },
+        { az: "Oturmaq", en: "Sit", en_read: "sit", level: "Intermediate", category: "Hərəkət" },
+        { az: "Durmaq", en: "Stand", en_read: "stend", level: "Intermediate", category: "Hərəkət" },
+        { az: "Uzanmaq", en: "Lie", en_read: "lay", level: "Intermediate", category: "Hərəkət" },
+        { az: "Düşmək", en: "Fall", en_read: "fol", level: "Intermediate", category: "Hərəkət" },
+        { az: "Qalxmaq", en: "Rise", en_read: "rayz", level: "Intermediate", category: "Hərəkət" },
+        { az: "Enmək", en: "Descend", en_read: "disend", level: "Intermediate", category: "Hərəkət" },
+        { az: "Dönmək", en: "Turn", en_read: "törn", level: "Intermediate", category: "Hərəkət" },
+        { az: "Sıçramaq", en: "Jump", en_read: "camp", level: "Intermediate", category: "Hərəkət" },
+        { az: "Üzmək", en: "Swim", en_read: "suim", level: "Intermediate", category: "Hərəkət" },
+        { az: "Uçmaq", en: "Fly", en_read: "flay", level: "Intermediate", category: "Hərəkət" },
+        { az: "Sürmək", en: "Drive", en_read: "drawv", level: "Intermediate", category: "Hərəkət" },
+        { az: "Dayanmaq", en: "Stop", en_read: "stop", level: "Intermediate", category: "Hərəkət" },
+        { az: "Başlamaq", en: "Start", en_read: "start", level: "Intermediate", category: "Hərəkət" },
+        { az: "Bitirmək", en: "Finish", en_read: "finiş", level: "Intermediate", category: "Hərəkət" },
+        { az: "Açmaq", en: "Open", en_read: "open", level: "Intermediate", category: "Hərəkət" },
+        { az: "Bağlamaq", en: "Close", en_read: "clouz", level: "Intermediate", category: "Hərəkət" },
+        // Fəaliyyət (20)
         { az: "Yemək", en: "Eat", en_read: "it", level: "Intermediate", category: "Fəaliyyət" },
         { az: "İçmək", en: "Drink", en_read: "drink", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Yatmaq", en: "Sleep", en_read: "slip", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Oxumaq", en: "Read", en_read: "rid", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Yazmaq", en: "Write", en_read: "rayt", level: "Intermediate", category: "Fəaliyyət" },
         { az: "Danışmaq", en: "Speak", en_read: "spik", level: "Intermediate", category: "Fəaliyyət" },
         { az: "Dinləmək", en: "Listen", en_read: "lisen", level: "Intermediate", category: "Fəaliyyət" },
         { az: "Eşitmək", en: "Hear", en_read: "hir", level: "Intermediate", category: "Fəaliyyət" },
         { az: "Görmək", en: "See", en_read: "si", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Düşünmək", en: "Think", en_read: "tink", level: "Intermediate", category: "Fəaliyyət" }
+        { az: "Düşünmək", en: "Think", en_read: "tink", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Sevmək", en: "Love", en_read: "lav", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Nifrət etmək", en: "Hate", en_read: "heyt", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Gülmək", en: "Laugh", en_read: "laf", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Ağlamaq", en: "Cry", en_read: "kray", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Xatırlamaq", en: "Remember", en_read: "rimember", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Unutmaq", en: "Forget", en_read: "forget", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Gözləmək", en: "Wait", en_read: "veyt", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Tələsmək", en: "Hurry", en_read: "hari", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Yavaşlamaq", en: "Slow down", en_read: "slou daun", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Dincəlmək", en: "Rest", en_read: "rest", level: "Intermediate", category: "Fəaliyyət" }
     ];
     
     const languages = ["en", "ru", "de", "es", "pt", "tr", "zh"];
@@ -312,145 +365,9 @@
         }
     }
     
-    // Supabase-dən məlumatları yüklə
-    async function loadFromSupabase() {
-        showLoading();
-        
-        if (!dbConnected || !supabase) {
-            initLocalWords();
-            hideLoading();
-            renderCards();
-            return;
-        }
-        
-        try {
-            const { data, error } = await supabase
-                .from('words')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            if (error) throw error;
-            
-            if (data && data.length > 0) {
-                wordsData = data.map(row => ({
-                    id: row.id.toString(),
-                    az: row.az,
-                    en: row.en,
-                    en_read: row.en_read,
-                    ru: row.ru || row.az,
-                    ru_read: row.ru_read || row.az.toLowerCase(),
-                    de: row.de || row.az,
-                    de_read: row.de_read || row.az.toLowerCase(),
-                    es: row.es || row.az,
-                    es_read: row.es_read || row.az.toLowerCase(),
-                    pt: row.pt || row.az,
-                    pt_read: row.pt_read || row.az.toLowerCase(),
-                    tr: row.tr || row.az,
-                    tr_read: row.tr_read || row.az.toLowerCase(),
-                    zh: row.zh || row.az,
-                    zh_read: row.zh_read || row.az.toLowerCase(),
-                    level: row.level || "Basic",
-                    category: row.category || "İstifadəçi sözləri"
-                }));
-            } else {
-                initLocalWords();
-            }
-            hideLoading();
-            renderCards();
-        } catch (error) {
-            console.error("Supabase-dən yükləmə xətası:", error);
-            initLocalWords();
-            hideLoading();
-            renderCards();
-        }
-    }
+    // Lokal olaraq işə sal
+    initLocalWords();
     
-    // Supabase-ə yeni söz əlavə et
-    async function addWordToSupabase(azWord, enWord) {
-        if (!dbConnected || !supabase) {
-            showStatus("Supabase bağlı deyil! Söz yalnız lokal olaraq əlavə olundu.", "error");
-            const newCard = {
-                id: `local${Date.now()}`,
-                az: azWord,
-                en: enWord,
-                en_read: enWord.toLowerCase(),
-                level: "Intermediate",
-                category: "İstifadəçi sözləri"
-            };
-            for (let lang of languages) {
-                if (lang === "en") continue;
-                newCard[lang] = azWord;
-                newCard[lang + "_read"] = azWord.toLowerCase();
-            }
-            wordsData.unshift(newCard);
-            renderCards();
-            return true;
-        }
-        
-        try {
-            const newWord = {
-                az: azWord,
-                en: enWord,
-                en_read: enWord.toLowerCase(),
-                level: "Intermediate",
-                category: "İstifadəçi sözləri",
-                created_at: new Date()
-            };
-            for (let lang of ["ru", "de", "es", "pt", "tr", "zh"]) {
-                newWord[lang] = azWord;
-                newWord[lang + "_read"] = azWord.toLowerCase();
-            }
-            
-            const { data, error } = await supabase
-                .from('words')
-                .insert([newWord])
-                .select();
-            
-            if (error) throw error;
-            
-            if (data && data[0]) {
-                wordsData.unshift({
-                    id: data[0].id.toString(),
-                    az: data[0].az,
-                    en: data[0].en,
-                    en_read: data[0].en_read,
-                    ru: data[0].ru || azWord,
-                    ru_read: data[0].ru_read || azWord.toLowerCase(),
-                    de: data[0].de || azWord,
-                    de_read: data[0].de_read || azWord.toLowerCase(),
-                    es: data[0].es || azWord,
-                    es_read: data[0].es_read || azWord.toLowerCase(),
-                    pt: data[0].pt || azWord,
-                    pt_read: data[0].pt_read || azWord.toLowerCase(),
-                    tr: data[0].tr || azWord,
-                    tr_read: data[0].tr_read || azWord.toLowerCase(),
-                    zh: data[0].zh || azWord,
-                    zh_read: data[0].zh_read || azWord.toLowerCase(),
-                    level: data[0].level || "Intermediate",
-                    category: data[0].category || "İstifadəçi sözləri"
-                });
-            }
-            renderCards();
-            return true;
-        } catch (error) {
-            console.error("Supabase-ə əlavə etmə xətası:", error);
-            showStatus("Xəta: " + error.message, "error");
-            return false;
-        }
-    }
-    
-    function showStatus(message, type) {
-        const statusDiv = document.getElementById("addWordStatus");
-        statusDiv.textContent = message;
-        statusDiv.className = "add-word-status " + type;
-        statusDiv.style.display = "block";
-        setTimeout(() => {
-            statusDiv.style.display = "none";
-            statusDiv.className = "add-word-status";
-        }, 3000);
-    }
-    
-    // ========== KART RENDERİNG ==========
     const languageOptions = [
         { code: "en", name: "İngiliscə", flag: "🇬🇧", textKey: "en", readKey: "en_read" },
         { code: "ru", name: "Rusca", flag: "🇷🇺", textKey: "ru", readKey: "ru_read" },
@@ -513,6 +430,10 @@
         window.speechSynthesis.speak(utterance);
     }
     
+    // Loading elementləri
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    function hideLoading() { loadingOverlay.classList.add("hidden"); }
+    
     // DOM elements
     const appMain = document.getElementById("appMain"), welcomeOverlay = document.getElementById("welcomeOverlay"), welcomeSelector = document.getElementById("welcomeLangSelector"), confirmLangBtn = document.getElementById("confirmLangBtn");
     const customDropdownBtn = document.getElementById("customDropdownBtn"), dropdownMenu = document.getElementById("dropdownMenu"), selectedLangText = document.getElementById("selectedLangText");
@@ -528,16 +449,36 @@
         const azWord = newWordInput.value.trim();
         const enWord = newWordTranslation.value.trim();
         if (!azWord || !enWord) {
-            showStatus("Zəhmət olmasa həm Azərbaycanca, həm də İngiliscə söz daxil edin!", "error");
+            const statusDiv = document.getElementById("addWordStatus");
+            statusDiv.textContent = "Zəhmət olmasa həm Azərbaycanca, həm də İngiliscə söz daxil edin!";
+            statusDiv.className = "add-word-status error";
+            statusDiv.style.display = "block";
+            setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
             return;
         }
-        showStatus("Söz əlavə olunur...", "success");
-        const success = await addWordToSupabase(azWord, enWord);
-        if (success) {
-            newWordInput.value = "";
-            newWordTranslation.value = "";
-            showStatus("✅ Söz uğurla əlavə edildi!", "success");
+        // Lokala əlavə et
+        const newCard = {
+            id: `local${Date.now()}`,
+            az: azWord,
+            en: enWord,
+            en_read: enWord.toLowerCase(),
+            level: "Intermediate",
+            category: "İstifadəçi sözləri"
+        };
+        for (let lang of languages) {
+            if (lang === "en") continue;
+            newCard[lang] = azWord;
+            newCard[lang + "_read"] = azWord.toLowerCase();
         }
+        wordsData.unshift(newCard);
+        newWordInput.value = "";
+        newWordTranslation.value = "";
+        renderCards();
+        const statusDiv = document.getElementById("addWordStatus");
+        statusDiv.textContent = "✅ Söz uğurla əlavə edildi!";
+        statusDiv.className = "add-word-status success";
+        statusDiv.style.display = "block";
+        setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
     });
     
     function buildDropdown() { dropdownMenu.innerHTML = ''; languageOptions.forEach(opt => { const item = document.createElement('div'); item.className = `dropdown-item ${currentLang === opt.code ? 'selected' : ''}`; item.innerHTML = `<span class="lang-flag">${opt.flag}</span> <span>${opt.name}</span>`; item.addEventListener('click', () => { changeLanguage(opt.code); closeDropdown(); }); dropdownMenu.appendChild(item); }); }
@@ -577,8 +518,8 @@
     function updateActiveUI() { document.querySelectorAll("#levelFilterContainer .level-btn").forEach(btn => { const txt = btn.innerText; if((currentLevel === "all" && txt === "Bütün Levellər") || currentLevel === txt) btn.classList.add("active"); else btn.classList.remove("active"); }); document.querySelectorAll("#categoryFilterContainer .level-btn").forEach(btn => { const cat = btn.getAttribute("data-cat"); if((currentCategory === "all" && cat === "all") || currentCategory === cat) btn.classList.add("active"); else btn.classList.remove("active"); }); }
     function changeLanguage(lang) { currentLang = lang; saveLang(); renderCards(); }
     function initWelcome() { welcomeSelector.innerHTML = languageOptions.map(opt => `<div class="lang-option" data-lang="${opt.code}">${opt.flag} ${opt.name}</div>`).join(''); document.querySelectorAll(".lang-option").forEach(el => { el.addEventListener("click", () => { currentLang = el.dataset.lang; document.querySelectorAll(".lang-option").forEach(opt => opt.style.background = ""); el.style.background = "var(--accent)"; }); }); }
-    function startApp() { localStorage.setItem("diloyren_first_visit", "false"); saveLang(); welcomeOverlay.classList.remove("active"); appMain.style.display = "block"; loadFromSupabase(); }
-    function checkFirstVisit() { const firstVisit = localStorage.getItem("diloyren_first_visit"); if (!firstVisit) { initWelcome(); welcomeOverlay.classList.add("active"); appMain.style.display = "none"; } else { appMain.style.display = "block"; welcomeOverlay.classList.remove("active"); loadFromSupabase(); } }
+    function startApp() { localStorage.setItem("diloyren_first_visit", "false"); saveLang(); welcomeOverlay.classList.remove("active"); appMain.style.display = "block"; hideLoading(); renderCards(); }
+    function checkFirstVisit() { const firstVisit = localStorage.getItem("diloyren_first_visit"); if (!firstVisit) { initWelcome(); welcomeOverlay.classList.add("active"); appMain.style.display = "none"; } else { appMain.style.display = "block"; welcomeOverlay.classList.remove("active"); hideLoading(); renderCards(); } }
     confirmLangBtn.addEventListener("click", startApp); openKnownBtn.addEventListener("click", () => openListModal('known')); openUnknownBtn.addEventListener("click", () => openListModal('unknown')); openFavBtn.addEventListener("click", () => { showFavoritesOnly = true; currentPage = 1; renderCards(); }); modalClearBtn.addEventListener("click", handleClear); modalCloseBtn.addEventListener("click", closeModal); modalOverlay.addEventListener("click", (e) => { if(e.target === modalOverlay) closeModal(); }); themeToggle.addEventListener("click", toggleTheme);
     function init() { loadStorage(); initTheme(); buildLevelButtons(); buildCategoryButtons(); currentLevel = "all"; currentCategory = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); buildDropdown(); updateDropdownDisplay(); checkFirstVisit(); }
     init();
