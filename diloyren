@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Dil Öyrən - Lokal + Supabase</title>
+    <title>Dil Öyrən - Supabase Database</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -14,7 +14,7 @@
             --card-back-text: #FFE6C7; --border-light: #e2e8f0; --btn-bg: #f1f5f9;
             --btn-hover: #e2e8f0; --shadow-md: 0 20px 30px -12px rgba(0,0,0,0.1);
             --stat-bg: #f1f5f9; --modal-bg: rgba(0,0,0,0.5); --danger: #c44536;
-            --speaker-btn: #4a6a8a; --success: #2e7d64;
+            --speaker-btn: #4a6a8a;
         }
         body.dark {
             --bg-gradient-start: #0f1724; --bg-gradient-end: #0a0f18; --surface: #1e293b;
@@ -22,7 +22,7 @@
             --card-front-bg: #334155; --card-back-bg: linear-gradient(135deg, #1e293b, #0f172a);
             --card-back-text: #fef3c7; --border-light: #334155; --btn-bg: #334155;
             --btn-hover: #475569; --stat-bg: #1e293b; --modal-bg: rgba(0,0,0,0.7);
-            --danger: #e05a4a; --speaker-btn: #5a7a9a; --success: #4c9a7a;
+            --danger: #e05a4a; --speaker-btn: #5a7a9a;
         }
         body { background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end)); font-family: 'Inter', system-ui, sans-serif; color: var(--text-primary); padding: 16px; min-height: 100vh; }
         
@@ -107,23 +107,6 @@
         .stat-card, .fav-header { background: var(--stat-bg); border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; border: 1px solid var(--border-light); cursor: pointer; }
         .stat-badge { background: var(--accent); color: #1e293b; padding: 2px 10px; border-radius: 30px; font-weight: bold; }
         
-        .add-word-panel {
-            background: var(--surface);
-            border-radius: 32px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            border: 1px solid var(--border-light);
-        }
-        .add-word-panel h3 { font-size: 1.1rem; margin-bottom: 12px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-        .add-word-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-        .add-word-input { flex: 2; padding: 12px 16px; border: 1px solid var(--border-light); border-radius: 48px; background: var(--surface); color: var(--text-primary); font-size: 1rem; outline: none; }
-        .add-word-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245,166,35,0.2); }
-        .add-word-btn { background: var(--accent); border: none; padding: 12px 24px; border-radius: 48px; font-weight: bold; cursor: pointer; }
-        .add-word-btn:hover { opacity: 0.85; transform: scale(0.98); }
-        .add-word-status { margin-top: 10px; font-size: 0.8rem; padding: 8px; border-radius: 16px; display: none; }
-        .add-word-status.success { background: var(--success); color: white; display: block; }
-        .add-word-status.error { background: var(--danger); color: white; display: block; }
-        
         .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
         .page-btn { background: var(--btn-bg); border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: 500; }
         .page-btn:hover { background: var(--btn-hover); }
@@ -175,20 +158,10 @@
 </div>
 
 <div class="app" id="appMain" style="display: none;">
-    <div class="hero"><p>🎯 <strong>Lokal + Supabase</strong> | Xəta olsa belə işləyir | 150+ söz</p></div>
-    
-    <div class="add-word-panel">
-        <h3>➕ Öz sözünü əlavə et</h3>
-        <div class="add-word-form">
-            <input type="text" id="newWordInput" class="add-word-input" placeholder="Azərbaycanca söz yaz... (məsələn: Kompüter)">
-            <input type="text" id="newWordTranslation" class="add-word-input" placeholder="İngiliscə tərcüməsi... (məsələn: Computer)">
-            <button id="addWordBtn" class="add-word-btn">➕ Əlavə et</button>
-        </div>
-        <div id="addWordStatus" class="add-word-status"></div>
-    </div>
+    <div class="hero"><p>🎯 <strong>Supabase Database</strong> | Canlı sözlər | 7 dil</p></div>
     
     <div class="top-bar">
-        <div class="brand"><h1>📖 Dil Öyrən</h1><p>Lokal DB | Offline də işləyir</p></div>
+        <div class="brand"><h1>📖 Dil Öyrən</h1><p>Supabase DB | 7 dil</p></div>
         <div class="level-filters" id="levelFilterContainer"></div>
         <div style="display: flex; gap: 12px; align-items: center;">
             <div class="lang-dropdown-wrapper" id="langDropdownWrapper">
@@ -208,13 +181,13 @@
     <div class="level-filters" style="justify-content: center; margin-bottom: 24px;" id="categoryFilterContainer"></div>
     <div id="cardsContainer" class="cards-grid"></div>
     <div class="pagination" id="paginationContainer"></div>
-    <div class="info-badge">✨ Kartın üzərinə klikləyin — tərcüməsi açılır | 🔊 Səsləndir | Lokal olaraq 150+ söz</div>
+    <div class="info-badge">✨ Kartın üzərinə klikləyin — tərcüməsi açılır | 🔊 Səsləndir | Supabase-dən canlı məlumatlar</div>
 </div>
 <div class="theme-toggle" id="themeToggle">🌙</div>
 <div id="welcomeOverlay" class="welcome-overlay">
     <div class="welcome-card">
         <h2>🌍 Xoş gəldiniz!</h2>
-        <p>Hansı dili öyrənmək istədiyinizi seçin. 150+ söz sizi gözləyir!</p>
+        <p>Hansı dili öyrənmək istədiyinizi seçin. Sözlər Supabase-dən gəlir!</p>
         <div class="lang-selector" id="welcomeLangSelector"></div>
         <button class="welcome-btn" id="confirmLangBtn">Başla</button>
     </div>
@@ -231,143 +204,89 @@
 </div>
 
 <script>
-    // ======================== LOKAL MƏLUMATLAR (200+ söz) ========================
-    // Bu sözlər hər zaman işləyir, Supabase xətası olsa belə
+    // ======================== SUPABASE KONFİQURASİYASI ========================
+    const SUPABASE_URL = "https://icwpaipqqqwjpooazmcu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_W5rnAxonO_Sq-EnCdlFU7Q_mkmi37yJ";
+    
+    let supabase = null;
+    let dbConnected = false;
     let wordsData = [];
-    let idCounter = 1;
     
-    // 150+ söz - tam siyahı
-    const initialWords = [
-        // Salamlaşma (15)
-        { az: "Salam", en: "Hello", en_read: "helou", level: "Basic", category: "Salamlaşma" },
-        { az: "Sağ ol", en: "Goodbye", en_read: "gudbay", level: "Basic", category: "Salamlaşma" },
-        { az: "Sabahınız xeyir", en: "Good morning", en_read: "gud morninq", level: "Basic", category: "Salamlaşma" },
-        { az: "Axşamınız xeyir", en: "Good evening", en_read: "gud ivninq", level: "Basic", category: "Salamlaşma" },
-        { az: "Gecəniz xeyir", en: "Good night", en_read: "gud nayt", level: "Basic", category: "Salamlaşma" },
-        { az: "Xoş gəldiniz", en: "Welcome", en_read: "velkam", level: "Basic", category: "Salamlaşma" },
-        { az: "Necəsən?", en: "How are you?", en_read: "hau ar yu", level: "Basic", category: "Salamlaşma" },
-        { az: "Görüşənədək", en: "See you", en_read: "si yu", level: "Basic", category: "Salamlaşma" },
-        { az: "Yaxşı günlər", en: "Have a nice day", en_read: "hev e nays dey", level: "Basic", category: "Salamlaşma" },
-        { az: "Uğurlar", en: "Good luck", en_read: "gud lak", level: "Basic", category: "Salamlaşma" },
-        { az: "Xoş səhər", en: "Good morning", en_read: "gud morninq", level: "Basic", category: "Salamlaşma" },
-        { az: "Xoş axşam", en: "Good evening", en_read: "gud ivninq", level: "Basic", category: "Salamlaşma" },
-        { az: "Allaha sağ ol", en: "Thank God", en_read: "senk god", level: "Basic", category: "Salamlaşma" },
-        { az: "Sağlam ol", en: "Be healthy", en_read: "bi helti", level: "Basic", category: "Salamlaşma" },
-        { az: "Buyurun", en: "Come in", en_read: "kam in", level: "Basic", category: "Salamlaşma" },
-        // Nəzakət (15)
-        { az: "Təşəkkür edirəm", en: "Thank you", en_read: "senk yu", level: "Basic", category: "Nəzakət" },
-        { az: "Çox sağ ol", en: "Thanks a lot", en_read: "senks e lot", level: "Basic", category: "Nəzakət" },
-        { az: "Minnətdaram", en: "I'm grateful", en_read: "aym greytful", level: "Basic", category: "Nəzakət" },
-        { az: "Bağışlayın", en: "Excuse me", en_read: "ekskyuz mi", level: "Basic", category: "Nəzakət" },
-        { az: "Üzr istəyirəm", en: "I'm sorry", en_read: "aym sori", level: "Basic", category: "Nəzakət" },
-        { az: "Xahiş edirəm", en: "Please", en_read: "pliz", level: "Basic", category: "Nəzakət" },
-        { az: "Buyurun", en: "Here you are", en_read: "hir yu ar", level: "Basic", category: "Nəzakət" },
-        { az: "Afərin", en: "Well done", en_read: "vel dan", level: "Basic", category: "Nəzakət" },
-        { az: "Əla", en: "Excellent", en_read: "ekselent", level: "Basic", category: "Nəzakət" },
-        { az: "Əla iş", en: "Good job", en_read: "gud cab", level: "Basic", category: "Nəzakət" },
-        { az: "Kömək edə bilərəm?", en: "Can I help?", en_read: "ken ay help", level: "Basic", category: "Nəzakət" },
-        { az: "Sağ olun", en: "Thanks", en_read: "senks", level: "Basic", category: "Nəzakət" },
-        { az: "Hörmətlə", en: "Respectfully", en_read: "rispektfuli", level: "Basic", category: "Nəzakət" },
-        { az: "Sayğı ilə", en: "With respect", en_read: "vid rispekt", level: "Basic", category: "Nəzakət" },
-        { az: "Zəhmət olmasa", en: "Please", en_read: "pliz", level: "Basic", category: "Nəzakət" },
-        // Əsas (30)
-        { az: "Bəli", en: "Yes", en_read: "yes", level: "Basic", category: "Əsas" },
-        { az: "Xeyr", en: "No", en_read: "nou", level: "Basic", category: "Əsas" },
-        { az: "Yaxşı", en: "Good", en_read: "gud", level: "Basic", category: "Əsas" },
-        { az: "Pis", en: "Bad", en_read: "bad", level: "Basic", category: "Əsas" },
-        { az: "Böyük", en: "Big", en_read: "big", level: "Basic", category: "Əsas" },
-        { az: "Kiçik", en: "Small", en_read: "smol", level: "Basic", category: "Əsas" },
-        { az: "Yeni", en: "New", en_read: "nyu", level: "Basic", category: "Əsas" },
-        { az: "Köhnə", en: "Old", en_read: "old", level: "Basic", category: "Əsas" },
-        { az: "İsti", en: "Hot", en_read: "hot", level: "Basic", category: "Əsas" },
-        { az: "Soyuq", en: "Cold", en_read: "cold", level: "Basic", category: "Əsas" },
-        { az: "Tez", en: "Fast", en_read: "fast", level: "Basic", category: "Əsas" },
-        { az: "Yavaş", en: "Slow", en_read: "slou", level: "Basic", category: "Əsas" },
-        { az: "Uzun", en: "Long", en_read: "long", level: "Basic", category: "Əsas" },
-        { az: "Qısa", en: "Short", en_read: "short", level: "Basic", category: "Əsas" },
-        { az: "Gözəl", en: "Beautiful", en_read: "byutıful", level: "Basic", category: "Əsas" },
-        { az: "Çirkin", en: "Ugly", en_read: "agli", level: "Basic", category: "Əsas" },
-        { az: "Ağıllı", en: "Smart", en_read: "smart", level: "Basic", category: "Əsas" },
-        { az: "Axmaq", en: "Stupid", en_read: "stupid", level: "Basic", category: "Əsas" },
-        { az: "Cəsarətli", en: "Brave", en_read: "breyv", level: "Basic", category: "Əsas" },
-        { az: "Qorxaq", en: "Cowardly", en_read: "kavardli", level: "Basic", category: "Əsas" },
-        { az: "Səmimi", en: "Sincere", en_read: "sinsir", level: "Basic", category: "Əsas" },
-        { az: "Saxta", en: "Fake", en_read: "feyk", level: "Basic", category: "Əsas" },
-        { az: "Səxavətli", en: "Generous", en_read: "cerıras", level: "Basic", category: "Əsas" },
-        { az: "Xəsis", en: "Stingy", en_read: "stinci", level: "Basic", category: "Əsas" },
-        { az: "Səbirli", en: "Patient", en_read: "peyşnt", level: "Basic", category: "Əsas" },
-        { az: "Dözümsüz", en: "Impatient", en_read: "impeyşnt", level: "Basic", category: "Əsas" },
-        { az: "Dürüst", en: "Honest", en_read: "onıst", level: "Basic", category: "Əsas" },
-        { az: "Yalançı", en: "Liar", en_read: "layır", level: "Basic", category: "Əsas" },
-        { az: "Təvazökar", en: "Modest", en_read: "modıst", level: "Basic", category: "Əsas" },
-        { az: "Təkəbbürlü", en: "Arrogant", en_read: "erıgınt", level: "Basic", category: "Əsas" },
-        // Hərəkət felləri (20)
-        { az: "Getmək", en: "Go", en_read: "gou", level: "Intermediate", category: "Hərəkət" },
-        { az: "Gəlmək", en: "Come", en_read: "kam", level: "Intermediate", category: "Hərəkət" },
-        { az: "Qaçmaq", en: "Run", en_read: "ran", level: "Intermediate", category: "Hərəkət" },
-        { az: "Gəzmək", en: "Walk", en_read: "vok", level: "Intermediate", category: "Hərəkət" },
-        { az: "Oturmaq", en: "Sit", en_read: "sit", level: "Intermediate", category: "Hərəkət" },
-        { az: "Durmaq", en: "Stand", en_read: "stend", level: "Intermediate", category: "Hərəkət" },
-        { az: "Uzanmaq", en: "Lie", en_read: "lay", level: "Intermediate", category: "Hərəkət" },
-        { az: "Düşmək", en: "Fall", en_read: "fol", level: "Intermediate", category: "Hərəkət" },
-        { az: "Qalxmaq", en: "Rise", en_read: "rayz", level: "Intermediate", category: "Hərəkət" },
-        { az: "Enmək", en: "Descend", en_read: "disend", level: "Intermediate", category: "Hərəkət" },
-        { az: "Dönmək", en: "Turn", en_read: "törn", level: "Intermediate", category: "Hərəkət" },
-        { az: "Sıçramaq", en: "Jump", en_read: "camp", level: "Intermediate", category: "Hərəkət" },
-        { az: "Üzmək", en: "Swim", en_read: "suim", level: "Intermediate", category: "Hərəkət" },
-        { az: "Uçmaq", en: "Fly", en_read: "flay", level: "Intermediate", category: "Hərəkət" },
-        { az: "Sürmək", en: "Drive", en_read: "drawv", level: "Intermediate", category: "Hərəkət" },
-        { az: "Dayanmaq", en: "Stop", en_read: "stop", level: "Intermediate", category: "Hərəkət" },
-        { az: "Başlamaq", en: "Start", en_read: "start", level: "Intermediate", category: "Hərəkət" },
-        { az: "Bitirmək", en: "Finish", en_read: "finiş", level: "Intermediate", category: "Hərəkət" },
-        { az: "Açmaq", en: "Open", en_read: "open", level: "Intermediate", category: "Hərəkət" },
-        { az: "Bağlamaq", en: "Close", en_read: "clouz", level: "Intermediate", category: "Hərəkət" },
-        // Fəaliyyət (20)
-        { az: "Yemək", en: "Eat", en_read: "it", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "İçmək", en: "Drink", en_read: "drink", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Yatmaq", en: "Sleep", en_read: "slip", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Oxumaq", en: "Read", en_read: "rid", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Yazmaq", en: "Write", en_read: "rayt", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Danışmaq", en: "Speak", en_read: "spik", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Dinləmək", en: "Listen", en_read: "lisen", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Eşitmək", en: "Hear", en_read: "hir", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Görmək", en: "See", en_read: "si", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Düşünmək", en: "Think", en_read: "tink", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Sevmək", en: "Love", en_read: "lav", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Nifrət etmək", en: "Hate", en_read: "heyt", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Gülmək", en: "Laugh", en_read: "laf", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Ağlamaq", en: "Cry", en_read: "kray", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Xatırlamaq", en: "Remember", en_read: "rimember", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Unutmaq", en: "Forget", en_read: "forget", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Gözləmək", en: "Wait", en_read: "veyt", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Tələsmək", en: "Hurry", en_read: "hari", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Yavaşlamaq", en: "Slow down", en_read: "slou daun", level: "Intermediate", category: "Fəaliyyət" },
-        { az: "Dincəlmək", en: "Rest", en_read: "rest", level: "Intermediate", category: "Fəaliyyət" }
-    ];
+    // Loading elementləri
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    function showLoading() { loadingOverlay.classList.remove("hidden"); }
+    function hideLoading() { loadingOverlay.classList.add("hidden"); }
     
-    const languages = ["en", "ru", "de", "es", "pt", "tr", "zh"];
+    // Supabase bağlantısı
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("YOUR")) {
+        try {
+            supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            dbConnected = true;
+            console.log("✅ Supabase bağlandı!");
+        } catch(e) {
+            console.error("Supabase bağlantı xətası:", e);
+            dbConnected = false;
+        }
+    } else {
+        console.warn("⚠️ Supabase konfiqurasiya edilməyib.");
+        dbConnected = false;
+    }
     
-    function initLocalWords() {
-        wordsData = [];
-        idCounter = 1;
-        for (let w of initialWords) {
-            let card = { id: `w${idCounter++}`, az: w.az, level: w.level, category: w.category };
-            for (let lang of languages) {
-                if (lang === "en") {
-                    card[lang] = w.en;
-                    card[lang + "_read"] = w.en_read;
-                } else {
-                    card[lang] = w.az;
-                    card[lang + "_read"] = w.az.toLowerCase();
-                }
+    // Supabase-dən məlumatları yüklə
+    async function loadFromSupabase() {
+        showLoading();
+        
+        if (!dbConnected || !supabase) {
+            console.error("Supabase bağlı deyil");
+            hideLoading();
+            renderCards();
+            return;
+        }
+        
+        try {
+            const { data, error } = await supabase
+                .from('words')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+                wordsData = data.map(row => ({
+                    id: row.id.toString(),
+                    az: row.az,
+                    en: row.en,
+                    en_read: row.en_read,
+                    ru: row.ru || row.az,
+                    ru_read: row.ru_read || row.az.toLowerCase(),
+                    de: row.de || row.az,
+                    de_read: row.de_read || row.az.toLowerCase(),
+                    es: row.es || row.az,
+                    es_read: row.es_read || row.az.toLowerCase(),
+                    pt: row.pt || row.az,
+                    pt_read: row.pt_read || row.az.toLowerCase(),
+                    tr: row.tr || row.az,
+                    tr_read: row.tr_read || row.az.toLowerCase(),
+                    zh: row.zh || row.az,
+                    zh_read: row.zh_read || row.az.toLowerCase(),
+                    level: row.level || "Basic",
+                    category: row.category || "Sözlər"
+                }));
+            } else {
+                wordsData = [];
+                console.log("Supabase-də heç bir məlumat yoxdur");
             }
-            wordsData.push(card);
+            hideLoading();
+            renderCards();
+        } catch (error) {
+            console.error("Supabase-dən yükləmə xətası:", error);
+            wordsData = [];
+            hideLoading();
+            renderCards();
         }
     }
     
-    // Lokal olaraq işə sal
-    initLocalWords();
-    
+    // Dil seçimləri
     const languageOptions = [
         { code: "en", name: "İngiliscə", flag: "🇬🇧", textKey: "en", readKey: "en_read" },
         { code: "ru", name: "Rusca", flag: "🇷🇺", textKey: "ru", readKey: "ru_read" },
@@ -430,10 +349,6 @@
         window.speechSynthesis.speak(utterance);
     }
     
-    // Loading elementləri
-    const loadingOverlay = document.getElementById("loadingOverlay");
-    function hideLoading() { loadingOverlay.classList.add("hidden"); }
-    
     // DOM elements
     const appMain = document.getElementById("appMain"), welcomeOverlay = document.getElementById("welcomeOverlay"), welcomeSelector = document.getElementById("welcomeLangSelector"), confirmLangBtn = document.getElementById("confirmLangBtn");
     const customDropdownBtn = document.getElementById("customDropdownBtn"), dropdownMenu = document.getElementById("dropdownMenu"), selectedLangText = document.getElementById("selectedLangText");
@@ -442,44 +357,7 @@
     const openKnownBtn = document.getElementById("openKnownModal"), openUnknownBtn = document.getElementById("openUnknownModal"), openFavBtn = document.getElementById("openFavModal");
     const modalOverlay = document.getElementById("listModal"), modalTitle = document.getElementById("modalTitle"), modalListContainer = document.getElementById("modalListContainer"), modalClearBtn = document.getElementById("modalClearBtn"), modalCloseBtn = document.getElementById("modalCloseBtn");
     const themeToggle = document.getElementById("themeToggle");
-    const addWordBtn = document.getElementById("addWordBtn"), newWordInput = document.getElementById("newWordInput"), newWordTranslation = document.getElementById("newWordTranslation");
     let currentModalType = null;
-    
-    addWordBtn.addEventListener("click", async () => {
-        const azWord = newWordInput.value.trim();
-        const enWord = newWordTranslation.value.trim();
-        if (!azWord || !enWord) {
-            const statusDiv = document.getElementById("addWordStatus");
-            statusDiv.textContent = "Zəhmət olmasa həm Azərbaycanca, həm də İngiliscə söz daxil edin!";
-            statusDiv.className = "add-word-status error";
-            statusDiv.style.display = "block";
-            setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
-            return;
-        }
-        // Lokala əlavə et
-        const newCard = {
-            id: `local${Date.now()}`,
-            az: azWord,
-            en: enWord,
-            en_read: enWord.toLowerCase(),
-            level: "Intermediate",
-            category: "İstifadəçi sözləri"
-        };
-        for (let lang of languages) {
-            if (lang === "en") continue;
-            newCard[lang] = azWord;
-            newCard[lang + "_read"] = azWord.toLowerCase();
-        }
-        wordsData.unshift(newCard);
-        newWordInput.value = "";
-        newWordTranslation.value = "";
-        renderCards();
-        const statusDiv = document.getElementById("addWordStatus");
-        statusDiv.textContent = "✅ Söz uğurla əlavə edildi!";
-        statusDiv.className = "add-word-status success";
-        statusDiv.style.display = "block";
-        setTimeout(() => { statusDiv.style.display = "none"; }, 3000);
-    });
     
     function buildDropdown() { dropdownMenu.innerHTML = ''; languageOptions.forEach(opt => { const item = document.createElement('div'); item.className = `dropdown-item ${currentLang === opt.code ? 'selected' : ''}`; item.innerHTML = `<span class="lang-flag">${opt.flag}</span> <span>${opt.name}</span>`; item.addEventListener('click', () => { changeLanguage(opt.code); closeDropdown(); }); dropdownMenu.appendChild(item); }); }
     function toggleDropdown() { dropdownMenu.classList.toggle('active'); }
@@ -511,15 +389,53 @@
     function getAllCategoriesSorted() { const cats = [...new Set(wordsData.map(c => c.category))]; cats.sort(); return cats; }
     function getFilteredCards() { let filtered = [...wordsData]; if(currentLevel !== "all") filtered = filtered.filter(c => c.level === currentLevel); if(currentCategory !== "all") filtered = filtered.filter(c => c.category === currentCategory); if(showFavoritesOnly) filtered = filtered.filter(c => favoriteIds.has(c.id)); return filtered; }
     function renderPagination(totalItems) { const totalPages = Math.ceil(totalItems / itemsPerPage); paginationContainer.innerHTML = ''; if (totalPages <= 1) return; const prevBtn = document.createElement('button'); prevBtn.textContent = '← Əvvəl'; prevBtn.className = 'page-btn'; prevBtn.disabled = currentPage === 1; prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCards(); } }; paginationContainer.appendChild(prevBtn); for (let i = 1; i <= Math.min(totalPages, 5); i++) { const btn = document.createElement('button'); btn.textContent = i; btn.className = `page-btn ${currentPage === i ? 'active' : ''}`; btn.onclick = () => { currentPage = i; renderCards(); }; paginationContainer.appendChild(btn); } const nextBtn = document.createElement('button'); nextBtn.textContent = 'Sonra →'; nextBtn.className = 'page-btn'; nextBtn.disabled = currentPage === totalPages; nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCards(); } }; paginationContainer.appendChild(nextBtn); }
-    function renderCards() { const filtered = getFilteredCards(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage); if (currentPage > totalPages) currentPage = 1; const start = (currentPage - 1) * itemsPerPage; const end = start + itemsPerPage; const pageCards = filtered.slice(start, end); if (pageCards.length === 0) { cardsContainer.innerHTML = `<div class="empty-msg">📭 Kart yoxdur. Filtirləri dəyişin.</div>`; renderPagination(0); return; } cardsContainer.innerHTML = ""; pageCards.forEach(card => { const isFav = favoriteIds.has(card.id); const isKnown = knownIds.has(card.id); const isUnknown = unknownIds.has(card.id); const backText = getTranslationText(card, currentLang); const backRead = getTranslationRead(card, currentLang); const flipDiv = document.createElement("div"); flipDiv.className = "flip-card"; const inner = document.createElement("div"); inner.className = "flip-card-inner"; const front = document.createElement("div"); front.className = "card-front"; front.innerHTML = `<div class="top-info"><div class="left-info"><div class="category-badge">📁 ${escapeHtml(card.category)}</div><div class="level-badge">${card.level}</div></div></div><div style="flex:1; display:flex; flex-direction:column; justify-content:center;"><div class="main-word">${escapeHtml(card.az)}</div></div><div><div class="action-buttons"><button class="know-btn ${isKnown ? 'active-know' : ''}">✅ Bilirəm</button><button class="dontknow-btn ${isUnknown ? 'active-unknown' : ''}">❌ Bilmirəm</button></div></div>`; const back = document.createElement("div"); back.className = "card-back"; back.innerHTML = `<div><div class="main-word" style="font-size:1rem;">${escapeHtml(backText)}</div>${backRead ? `<div class="pronunciation">🔊 ${escapeHtml(backRead)}</div>` : ''}<button class="speak-btn" style="margin-top: 12px;">🔊 Səsləndir</button></div><div style="margin-top:12px; font-size:0.6rem; opacity:0.6;">📘 ${escapeHtml(card.az)}</div>`; inner.appendChild(front); inner.appendChild(back); flipDiv.appendChild(inner); const star = document.createElement("div"); star.className = `star-icon ${isFav ? "favorited" : ""}`; star.innerHTML = isFav ? "⭐" : "☆"; star.addEventListener("click", (e) => toggleFavorite(card.id, e)); flipDiv.appendChild(star); const knowBtn = front.querySelector(".know-btn"), dontBtn = front.querySelector(".dontknow-btn"); const speakBtn = back.querySelector(".speak-btn"); knowBtn.addEventListener("click", (e) => setKnown(card.id, e)); dontBtn.addEventListener("click", (e) => setUnknown(card.id, e)); speakBtn.addEventListener("click", (e) => { e.stopPropagation(); handleSpeak(card, currentLang, e, speakBtn); }); attachClickFlip(flipDiv); cardsContainer.appendChild(flipDiv); }); renderPagination(totalItems); }
+    function renderCards() { 
+        const filtered = getFilteredCards(); 
+        const totalItems = filtered.length; 
+        const totalPages = Math.ceil(totalItems / itemsPerPage); 
+        if (currentPage > totalPages) currentPage = 1; 
+        const start = (currentPage - 1) * itemsPerPage; 
+        const end = start + itemsPerPage; 
+        const pageCards = filtered.slice(start, end); 
+        
+        if (pageCards.length === 0) { 
+            cardsContainer.innerHTML = `<div class="empty-msg">📭 Kart yoxdur</div>`; 
+            renderPagination(0); 
+            return; 
+        } 
+        
+        cardsContainer.innerHTML = ""; 
+        pageCards.forEach(card => { 
+            const isFav = favoriteIds.has(card.id); 
+            const isKnown = knownIds.has(card.id); 
+            const isUnknown = unknownIds.has(card.id); 
+            const backText = getTranslationText(card, currentLang); 
+            const backRead = getTranslationRead(card, currentLang); 
+            const flipDiv = document.createElement("div"); flipDiv.className = "flip-card"; 
+            const inner = document.createElement("div"); inner.className = "flip-card-inner"; 
+            const front = document.createElement("div"); front.className = "card-front"; 
+            front.innerHTML = `<div class="top-info"><div class="left-info"><div class="category-badge">📁 ${escapeHtml(card.category)}</div><div class="level-badge">${card.level}</div></div></div><div style="flex:1; display:flex; flex-direction:column; justify-content:center;"><div class="main-word">${escapeHtml(card.az)}</div></div><div><div class="action-buttons"><button class="know-btn ${isKnown ? 'active-know' : ''}">✅ Bilirəm</button><button class="dontknow-btn ${isUnknown ? 'active-unknown' : ''}">❌ Bilmirəm</button></div></div>`; 
+            const back = document.createElement("div"); back.className = "card-back"; 
+            back.innerHTML = `<div><div class="main-word" style="font-size:1rem;">${escapeHtml(backText)}</div>${backRead ? `<div class="pronunciation">🔊 ${escapeHtml(backRead)}</div>` : ''}<button class="speak-btn" style="margin-top: 12px;">🔊 Səsləndir</button></div><div style="margin-top:12px; font-size:0.6rem; opacity:0.6;">📘 ${escapeHtml(card.az)}</div>`; 
+            inner.appendChild(front); inner.appendChild(back); flipDiv.appendChild(inner); 
+            const star = document.createElement("div"); star.className = `star-icon ${isFav ? "favorited" : ""}`; star.innerHTML = isFav ? "⭐" : "☆"; star.addEventListener("click", (e) => toggleFavorite(card.id, e)); flipDiv.appendChild(star); 
+            const knowBtn = front.querySelector(".know-btn"), dontBtn = front.querySelector(".dontknow-btn"); 
+            const speakBtn = back.querySelector(".speak-btn"); 
+            knowBtn.addEventListener("click", (e) => setKnown(card.id, e)); 
+            dontBtn.addEventListener("click", (e) => setUnknown(card.id, e)); 
+            speakBtn.addEventListener("click", (e) => { e.stopPropagation(); handleSpeak(card, currentLang, e, speakBtn); }); 
+            attachClickFlip(flipDiv); cardsContainer.appendChild(flipDiv); 
+        }); 
+        renderPagination(totalItems); 
+    }
     function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     function buildLevelButtons() { levelContainer.innerHTML = ''; const allBtn = document.createElement('button'); allBtn.className = `level-btn ${currentLevel === "all" ? "active" : ""}`; allBtn.innerText = "Bütün Levellər"; allBtn.onclick = () => { currentLevel = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; levelContainer.appendChild(allBtn); levelsOrder.forEach(lvl => { const btn = document.createElement('button'); btn.className = `level-btn ${currentLevel === lvl ? "active" : ""}`; btn.innerText = lvl; btn.onclick = () => { currentLevel = lvl; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; levelContainer.appendChild(btn); }); }
     function buildCategoryButtons() { categoryContainer.innerHTML = ''; const allCat = document.createElement('button'); allCat.className = `level-btn ${currentCategory === "all" ? "active" : ""}`; allCat.innerText = "📌 Bütün Mövzular"; allCat.setAttribute("data-cat","all"); allCat.onclick = () => { currentCategory = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; categoryContainer.appendChild(allCat); getAllCategoriesSorted().forEach(cat => { const btn = document.createElement('button'); btn.className = `level-btn ${currentCategory === cat ? "active" : ""}`; btn.innerText = cat; btn.setAttribute("data-cat", cat); btn.onclick = () => { currentCategory = cat; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; categoryContainer.appendChild(btn); }); }
     function updateActiveUI() { document.querySelectorAll("#levelFilterContainer .level-btn").forEach(btn => { const txt = btn.innerText; if((currentLevel === "all" && txt === "Bütün Levellər") || currentLevel === txt) btn.classList.add("active"); else btn.classList.remove("active"); }); document.querySelectorAll("#categoryFilterContainer .level-btn").forEach(btn => { const cat = btn.getAttribute("data-cat"); if((currentCategory === "all" && cat === "all") || currentCategory === cat) btn.classList.add("active"); else btn.classList.remove("active"); }); }
     function changeLanguage(lang) { currentLang = lang; saveLang(); renderCards(); }
     function initWelcome() { welcomeSelector.innerHTML = languageOptions.map(opt => `<div class="lang-option" data-lang="${opt.code}">${opt.flag} ${opt.name}</div>`).join(''); document.querySelectorAll(".lang-option").forEach(el => { el.addEventListener("click", () => { currentLang = el.dataset.lang; document.querySelectorAll(".lang-option").forEach(opt => opt.style.background = ""); el.style.background = "var(--accent)"; }); }); }
-    function startApp() { localStorage.setItem("diloyren_first_visit", "false"); saveLang(); welcomeOverlay.classList.remove("active"); appMain.style.display = "block"; hideLoading(); renderCards(); }
-    function checkFirstVisit() { const firstVisit = localStorage.getItem("diloyren_first_visit"); if (!firstVisit) { initWelcome(); welcomeOverlay.classList.add("active"); appMain.style.display = "none"; } else { appMain.style.display = "block"; welcomeOverlay.classList.remove("active"); hideLoading(); renderCards(); } }
+    function startApp() { localStorage.setItem("diloyren_first_visit", "false"); saveLang(); welcomeOverlay.classList.remove("active"); appMain.style.display = "block"; loadFromSupabase(); }
+    function checkFirstVisit() { const firstVisit = localStorage.getItem("diloyren_first_visit"); if (!firstVisit) { initWelcome(); welcomeOverlay.classList.add("active"); appMain.style.display = "none"; } else { appMain.style.display = "block"; welcomeOverlay.classList.remove("active"); loadFromSupabase(); } }
     confirmLangBtn.addEventListener("click", startApp); openKnownBtn.addEventListener("click", () => openListModal('known')); openUnknownBtn.addEventListener("click", () => openListModal('unknown')); openFavBtn.addEventListener("click", () => { showFavoritesOnly = true; currentPage = 1; renderCards(); }); modalClearBtn.addEventListener("click", handleClear); modalCloseBtn.addEventListener("click", closeModal); modalOverlay.addEventListener("click", (e) => { if(e.target === modalOverlay) closeModal(); }); themeToggle.addEventListener("click", toggleTheme);
     function init() { loadStorage(); initTheme(); buildLevelButtons(); buildCategoryButtons(); currentLevel = "all"; currentCategory = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); buildDropdown(); updateDropdownDisplay(); checkFirstVisit(); }
     init();
