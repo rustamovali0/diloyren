@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dil Öyrən - Supabase Database ilə</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-gradient-start: #f5f7fc; --bg-gradient-end: #e9eef4; --surface: #ffffff;
+            --text-primary: #1e2a3a; --text-secondary: #4a627a; --accent: #f5a623;
+            --card-front-bg: #ffffff; --card-back-bg: linear-gradient(135deg, #2c3e4e, #1e2f3b);
+            --card-back-text: #FFE6C7; --border-light: #e2e8f0; --btn-bg: #f1f5f9;
+            --btn-hover: #e2e8f0; --shadow-md: 0 20px 30px -12px rgba(0,0,0,0.1);
+            --stat-bg: #f1f5f9; --modal-bg: rgba(0,0,0,0.5); --danger: #c44536;
+            --speaker-btn: #4a6a8a; --success: #2e7d64;
+        }
+        body.dark {
+            --bg-gradient-start: #0f1724; --bg-gradient-end: #0a0f18; --surface: #1e293b;
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8; --accent: #fbbf24;
+            --card-front-bg: #334155; --card-back-bg: linear-gradient(135deg, #1e293b, #0f172a);
+            --card-back-text: #fef3c7; --border-light: #334155; --btn-bg: #334155;
+            --btn-hover: #475569; --stat-bg: #1e293b; --modal-bg: rgba(0,0,0,0.7);
+            --danger: #e05a4a; --speaker-btn: #5a7a9a; --success: #4c9a7a;
+        }
+        body { background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end)); font-family: 'Inter', system-ui, sans-serif; color: var(--text-primary); padding: 16px; min-height: 100vh; }
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 24px; }
+        @media (min-width: 768px) { .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+        @media (min-width: 1024px) { .cards-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
+        
+        .lang-dropdown-wrapper { position: relative; }
+        .custom-dropdown { background: var(--surface); border: 1px solid var(--border-light); border-radius: 48px; padding: 8px 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 160px; justify-content: space-between; }
+        .custom-dropdown:hover { background: var(--btn-hover); border-color: var(--accent); }
+        .dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-light); border-radius: 24px; box-shadow: var(--shadow-md); z-index: 100; display: none; overflow: hidden; max-height: 300px; overflow-y: auto; }
+        .dropdown-menu.active { display: block; animation: fadeIn 0.15s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .dropdown-item { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
+        .dropdown-item:hover { background: var(--btn-hover); }
+        .dropdown-item.selected { background: var(--accent); color: #1e2a36; font-weight: 600; }
+        .lang-flag { font-size: 1.2rem; }
+        
+        .theme-toggle { position: fixed; bottom: 24px; right: 24px; width: 52px; height: 52px; border-radius: 60px; background: var(--surface); border: 1px solid var(--border-light); box-shadow: var(--shadow-md); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 26px; z-index: 1000; }
+        .app { max-width: 1400px; margin: 0 auto; }
+        
+        .welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 3000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .welcome-overlay.active { visibility: visible; opacity: 1; }
+        .welcome-card { background: var(--surface); border-radius: 48px; padding: 32px; max-width: 500px; width: 90%; text-align: center; }
+        .welcome-card h2 { font-size: 1.8rem; margin-bottom: 16px; background: linear-gradient(135deg, var(--accent), #ff8c42); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .lang-selector { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 20px 0; }
+        .lang-option { background: var(--btn-bg); border: 1px solid var(--border-light); padding: 10px 20px; border-radius: 60px; cursor: pointer; }
+        .lang-option:hover { background: var(--accent); transform: scale(1.02); }
+        .welcome-btn { background: var(--accent); border: none; padding: 12px 28px; border-radius: 60px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 16px; }
+        
+        .hero { background: var(--surface); border-radius: 24px; padding: 16px 24px; margin-bottom: 24px; text-align: center; border: 1px solid var(--border-light); }
+        .top-bar { background: var(--surface); border-radius: 32px; padding: 16px 24px; margin-bottom: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; border: 1px solid var(--border-light); }
+        .brand h1 { font-weight: 700; font-size: 1.8rem; background: linear-gradient(135deg, var(--accent), #ff8c42); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .level-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+        .level-btn { background: var(--btn-bg); border: 1px solid var(--border-light); padding: 8px 18px; border-radius: 40px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: var(--text-primary); }
+        .level-btn.active { background: var(--accent); color: #1e2a36; border-color: var(--accent); }
+        .stats-fav-panel { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .stat-card, .fav-header { background: var(--stat-bg); border-radius: 40px; padding: 6px 16px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; border: 1px solid var(--border-light); cursor: pointer; }
+        .stat-badge { background: var(--accent); color: #1e293b; padding: 2px 10px; border-radius: 30px; font-weight: bold; }
+        
+        .add-word-panel {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-light);
+        }
+        .add-word-panel h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .add-word-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .add-word-input {
+            flex: 2;
+            padding: 12px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 48px;
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+        }
+        .add-word-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245,166,35,0.2); }
+        .add-word-btn {
+            background: var(--accent);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 48px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .add-word-btn:hover { opacity: 0.85; transform: scale(0.98); }
+        .add-word-status {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            padding: 8px;
+            border-radius: 16px;
+            display: none;
+        }
+        .add-word-status.success { background: var(--success); color: white; display: block; }
+        .add-word-status.error { background: var(--danger); color: white; display: block; }
+        
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+        .page-btn { background: var(--btn-bg); border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: 500; }
+        .page-btn:hover { background: var(--btn-hover); }
+        .page-btn.active { background: var(--accent); color: #1e2a36; border-color: var(--accent); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .flip-card { background-color: transparent; width: 100%; aspect-ratio: 3 / 4; perspective: 1600px; cursor: pointer; position: relative; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; border-radius: 20px; box-shadow: var(--shadow-md); }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-front { background: var(--card-front-bg); border: 1px solid var(--border-light); }
+        .card-back { background: var(--card-back-bg); color: var(--card-back-text); transform: rotateY(180deg); justify-content: center; align-items: center; text-align: center; }
+        .main-word { font-size: 1rem; font-weight: 800; margin: 8px 0; text-align: center; word-break: break-word; }
+        @media (min-width: 768px) { .main-word { font-size: 1.2rem; } }
+        .pronunciation { font-size: 0.85rem; font-weight: 500; opacity: 0.85; margin-top: 8px; text-align: center; background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 40px; display: inline-block; }
+        .category-badge { background: var(--accent); padding: 4px 8px; border-radius: 20px; font-size: 0.6rem; font-weight: bold; color: #1e293b; display: inline-block; }
+        .level-badge { background: var(--btn-bg); padding: 4px 8px; border-radius: 20px; font-size: 0.6rem; font-weight: 500; display: inline-block; }
+        .top-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%; }
+        .left-info { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .action-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+        .know-btn, .dontknow-btn, .speak-btn, .stop-speak-btn { border: none; padding: 6px 12px; border-radius: 40px; font-weight: bold; cursor: pointer; font-size: 0.7rem; transition: all 0.2s ease; }
+        .know-btn, .dontknow-btn { opacity: 0.6; }
+        .know-btn { background: #2e7d64; color: white; }
+        .dontknow-btn { background: #b5654b; color: white; }
+        .know-btn.active-know { opacity: 1; background: #1f5a48; }
+        .dontknow-btn.active-unknown { opacity: 1; background: #8a3e2a; }
+        .speak-btn, .stop-speak-btn { background: var(--speaker-btn); color: white; opacity: 0.85; display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; padding: 4px 10px; }
+        .stop-speak-btn { background: #c44536; }
+        
+        .star-icon { position: absolute; top: 10px; right: 10px; font-size: 22px; cursor: pointer; z-index: 25; background: rgba(0,0,0,0.25); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; backdrop-filter: blur(4px); color: #e0e0e0; border: 1px solid #000000; }
+        .star-icon.favorited { color: #FFD966; border-color: #000000; background: rgba(0,0,0,0.35); }
+        .empty-msg { text-align: center; padding: 60px; background: var(--surface); border-radius: 48px; margin-top: 40px; }
+        .info-badge { text-align: center; margin-top: 36px; font-size: 0.7rem; opacity: 0.5; padding: 16px; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-bg); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-content { background: var(--surface); border-radius: 32px; padding: 24px; width: 90%; max-width: 550px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-list { flex: 1; overflow-y: auto; margin: 16px 0; max-height: 50vh; }
+        .modal-list-item { padding: 12px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 12px; }
+        .modal-clear-btn { background: var(--danger); color: white; padding: 10px; border-radius: 40px; flex: 1; cursor: pointer; }
+        .modal-close-btn { background: var(--btn-bg); border: 1px solid var(--border-light); padding: 10px; border-radius: 40px; flex: 1; cursor: pointer; }
+        
+        .loading-spinner { text-align: center; padding: 40px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+<div class="app" id="appMain" style="display: none;">
+    <div class="hero"><p>🎯 <strong>Supabase Database ilə canlı sözlər</strong> | Söz əlavə et, hər kəs görsün!</p></div>
+    
+    <div class="add-word-panel">
+        <h3>➕ Öz sözünü əlavə et</h3>
+        <div class="add-word-form">
+            <input type="text" id="newWordInput" class="add-word-input" placeholder="Azərbaycanca söz yaz... (məsələn: Kompüter)">
+            <input type="text" id="newWordTranslation" class="add-word-input" placeholder="İngiliscə tərcüməsi... (məsələn: Computer)">
+            <button id="addWordBtn" class="add-word-btn">➕ Əlavə et</button>
+        </div>
+        <div id="addWordStatus" class="add-word-status"></div>
+    </div>
+    
+    <div class="top-bar">
+        <div class="brand"><h1>📖 Dil Öyrən</h1><p>Supabase DB | Canlı sinxronizasiya</p></div>
+        <div class="level-filters" id="levelFilterContainer"></div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="lang-dropdown-wrapper" id="langDropdownWrapper">
+                <div class="custom-dropdown" id="customDropdownBtn">
+                    <span id="selectedLangText">🇬🇧 İngiliscə</span>
+                    <span class="dropdown-arrow">▼</span>
+                </div>
+                <div class="dropdown-menu" id="dropdownMenu"></div>
+            </div>
+            <div class="stats-fav-panel">
+                <div class="stat-card" id="openKnownModal">✅ Bilirəm <span class="stat-badge" id="knownCount">0</span></div>
+                <div class="stat-card" id="openUnknownModal">❌ Bilmirəm <span class="stat-badge" id="unknownCount">0</span></div>
+                <div class="fav-header" id="openFavModal">⭐ Sevimlilər <span id="favCountBadge" class="stat-badge">0</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="level-filters" style="justify-content: center; margin-bottom: 24px;" id="categoryFilterContainer"></div>
+    <div id="cardsContainer" class="cards-grid"><div class="loading-spinner">⏳ Məlumatlar yüklənir...</div></div>
+    <div class="pagination" id="paginationContainer"></div>
+    <div class="info-badge">✨ Kartın üzərinə klikləyin — tərcüməsi açılır | 🔊 Səsləndir | Söz əlavə et, hamı görsün!</div>
+</div>
+<div class="theme-toggle" id="themeToggle">🌙</div>
+<div id="welcomeOverlay" class="welcome-overlay">
+    <div class="welcome-card">
+        <h2>🌍 Xoş gəldiniz!</h2>
+        <p>Hansı dili öyrənmək istədiyinizi seçin. Söz əlavə edin, hamı görsün!</p>
+        <div class="lang-selector" id="welcomeLangSelector"></div>
+        <button class="welcome-btn" id="confirmLangBtn">Başla</button>
+    </div>
+</div>
+<div id="listModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 id="modalTitle">📋 Siyahı</h3>
+        <div id="modalListContainer" class="modal-list"></div>
+        <div class="modal-buttons">
+            <button id="modalClearBtn" class="modal-clear-btn">🗑️ Təmizlə</button>
+            <button id="modalCloseBtn" class="modal-close-btn">Bağla</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ======================== SUPABASE KONFİQURASİYASI ========================
+    // ✅ Sizin URL və Public key-iniz artıq daxil edilib
+    const SUPABASE_URL = "https://icwpaipqqqwjpooazmcu.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_W5rnAxonO_Sq-EnCdlFU7Q_mkmi37yJ";
+    
+    let supabase = null;
+    let dbConnected = false;
+    
+    // Supabase bağlantısını yoxla
+    if (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("YOUR")) {
+        try {
+            supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            dbConnected = true;
+            console.log("✅ Supabase bağlandı!");
+        } catch(e) {
+            console.error("Supabase bağlantı xətası:", e);
+            dbConnected = false;
+        }
+    } else {
+        console.warn("⚠️ Supabase konfiqurasiya edilməyib.");
+        dbConnected = false;
+    }
+    
+    // ========== BAŞLANĞIC SÖZLƏR (əgər database boşdursa) ==========
+    let wordsData = [];
+    let idCounter = 1;
+    
+    const initialWords = [
+        { az: "Salam", en: "Hello", en_read: "helou", level: "Basic", category: "Salamlaşma" },
+        { az: "Sağ ol", en: "Goodbye", en_read: "gudbay", level: "Basic", category: "Salamlaşma" },
+        { az: "Necəsən?", en: "How are you?", en_read: "hau ar yu", level: "Basic", category: "Salamlaşma" },
+        { az: "Təşəkkür edirəm", en: "Thank you", en_read: "senk yu", level: "Basic", category: "Nəzakət" },
+        { az: "Bağışlayın", en: "Excuse me", en_read: "ekskyuz mi", level: "Basic", category: "Nəzakət" },
+        { az: "Bəli", en: "Yes", en_read: "yes", level: "Basic", category: "Əsas" },
+        { az: "Xeyr", en: "No", en_read: "nou", level: "Basic", category: "Əsas" },
+        { az: "Yaxşı", en: "Good", en_read: "gud", level: "Basic", category: "Əsas" },
+        { az: "Getmək", en: "Go", en_read: "gou", level: "Intermediate", category: "Hərəkət" },
+        { az: "Gəlmək", en: "Come", en_read: "kam", level: "Intermediate", category: "Hərəkət" },
+        { az: "Yemək", en: "Eat", en_read: "it", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "İçmək", en: "Drink", en_read: "drink", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Danışmaq", en: "Speak", en_read: "spik", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Dinləmək", en: "Listen", en_read: "lisen", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Eşitmək", en: "Hear", en_read: "hir", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Görmək", en: "See", en_read: "si", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Düşünmək", en: "Think", en_read: "tink", level: "Intermediate", category: "Fəaliyyət" },
+        { az: "Böyük", en: "Big", en_read: "big", level: "Basic", category: "Əsas" },
+        { az: "Kiçik", en: "Small", en_read: "smol", level: "Basic", category: "Əsas" },
+        { az: "Gözəl", en: "Beautiful", en_read: "byutıful", level: "Basic", category: "Əsas" }
+    ];
+    
+    const languages = ["en", "ru", "de", "es", "pt", "tr", "zh"];
+    
+    function initLocalWords() {
+        wordsData = [];
+        idCounter = 1;
+        for (let w of initialWords) {
+            let card = { id: `w${idCounter++}`, az: w.az, level: w.level, category: w.category };
+            for (let lang of languages) {
+                if (lang === "en") {
+                    card[lang] = w.en;
+                    card[lang + "_read"] = w.en_read;
+                } else {
+                    card[lang] = w.az;
+                    card[lang + "_read"] = w.az.toLowerCase();
+                }
+            }
+            wordsData.push(card);
+        }
+    }
+    
+    // Supabase-dən məlumatları yüklə
+    async function loadFromSupabase() {
+        if (!dbConnected || !supabase) {
+            initLocalWords();
+            renderCards();
+            return;
+        }
+        
+        try {
+            const { data, error } = await supabase
+                .from('words')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+                wordsData = data.map(row => ({
+                    id: row.id.toString(),
+                    az: row.az,
+                    en: row.en,
+                    en_read: row.en_read,
+                    ru: row.ru || row.az,
+                    ru_read: row.ru_read || row.az.toLowerCase(),
+                    de: row.de || row.az,
+                    de_read: row.de_read || row.az.toLowerCase(),
+                    es: row.es || row.az,
+                    es_read: row.es_read || row.az.toLowerCase(),
+                    pt: row.pt || row.az,
+                    pt_read: row.pt_read || row.az.toLowerCase(),
+                    tr: row.tr || row.az,
+                    tr_read: row.tr_read || row.az.toLowerCase(),
+                    zh: row.zh || row.az,
+                    zh_read: row.zh_read || row.az.toLowerCase(),
+                    level: row.level || "Basic",
+                    category: row.category || "İstifadəçi sözləri"
+                }));
+            } else {
+                initLocalWords();
+            }
+            renderCards();
+        } catch (error) {
+            console.error("Supabase-dən yükləmə xətası:", error);
+            initLocalWords();
+            renderCards();
+        }
+    }
+    
+    // Supabase-ə yeni söz əlavə et
+    async function addWordToSupabase(azWord, enWord) {
+        if (!dbConnected || !supabase) {
+            showStatus("Supabase bağlı deyil! Söz yalnız lokal olaraq əlavə olundu.", "error");
+            const newCard = {
+                id: `local${Date.now()}`,
+                az: azWord,
+                en: enWord,
+                en_read: enWord.toLowerCase(),
+                level: "Intermediate",
+                category: "İstifadəçi sözləri"
+            };
+            for (let lang of languages) {
+                if (lang === "en") continue;
+                newCard[lang] = azWord;
+                newCard[lang + "_read"] = azWord.toLowerCase();
+            }
+            wordsData.unshift(newCard);
+            renderCards();
+            return true;
+        }
+        
+        try {
+            const newWord = {
+                az: azWord,
+                en: enWord,
+                en_read: enWord.toLowerCase(),
+                level: "Intermediate",
+                category: "İstifadəçi sözləri",
+                created_at: new Date()
+            };
+            for (let lang of ["ru", "de", "es", "pt", "tr", "zh"]) {
+                newWord[lang] = azWord;
+                newWord[lang + "_read"] = azWord.toLowerCase();
+            }
+            
+            const { data, error } = await supabase
+                .from('words')
+                .insert([newWord])
+                .select();
+            
+            if (error) throw error;
+            
+            if (data && data[0]) {
+                wordsData.unshift({
+                    id: data[0].id.toString(),
+                    az: data[0].az,
+                    en: data[0].en,
+                    en_read: data[0].en_read,
+                    ru: data[0].ru || azWord,
+                    ru_read: data[0].ru_read || azWord.toLowerCase(),
+                    de: data[0].de || azWord,
+                    de_read: data[0].de_read || azWord.toLowerCase(),
+                    es: data[0].es || azWord,
+                    es_read: data[0].es_read || azWord.toLowerCase(),
+                    pt: data[0].pt || azWord,
+                    pt_read: data[0].pt_read || azWord.toLowerCase(),
+                    tr: data[0].tr || azWord,
+                    tr_read: data[0].tr_read || azWord.toLowerCase(),
+                    zh: data[0].zh || azWord,
+                    zh_read: data[0].zh_read || azWord.toLowerCase(),
+                    level: data[0].level || "Intermediate",
+                    category: data[0].category || "İstifadəçi sözləri"
+                });
+            }
+            renderCards();
+            return true;
+        } catch (error) {
+            console.error("Supabase-ə əlavə etmə xətası:", error);
+            showStatus("Xəta: " + error.message, "error");
+            return false;
+        }
+    }
+    
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById("addWordStatus");
+        statusDiv.textContent = message;
+        statusDiv.className = "add-word-status " + type;
+        statusDiv.style.display = "block";
+        setTimeout(() => {
+            statusDiv.style.display = "none";
+            statusDiv.className = "add-word-status";
+        }, 3000);
+    }
+    
+    // ========== KART RENDERİNG ==========
+    const languageOptions = [
+        { code: "en", name: "İngiliscə", flag: "🇬🇧", textKey: "en", readKey: "en_read" },
+        { code: "ru", name: "Rusca", flag: "🇷🇺", textKey: "ru", readKey: "ru_read" },
+        { code: "de", name: "Almanca", flag: "🇩🇪", textKey: "de", readKey: "de_read" },
+        { code: "es", name: "İspanca", flag: "🇪🇸", textKey: "es", readKey: "es_read" },
+        { code: "pt", name: "Portuqalca", flag: "🇵🇹", textKey: "pt", readKey: "pt_read" },
+        { code: "tr", name: "Türkcə", flag: "🇹🇷", textKey: "tr", readKey: "tr_read" },
+        { code: "zh", name: "Çincə", flag: "🇨🇳", textKey: "zh", readKey: "zh_read" }
+    ];
+    
+    let currentLang = "en", favoriteIds = new Set(), knownIds = new Set(), unknownIds = new Set(), currentLevel = "all", currentCategory = "all", showFavoritesOnly = false, currentPage = 1;
+    const itemsPerPage = 50, levelsOrder = ["Basic", "Intermediate", "Advanced", "Pro"];
+    
+    let currentUtterance = null;
+    let currentSpeakButton = null;
+    
+    function getTranslationText(card, langCode) { return card[langCode] || card.en; }
+    function getTranslationRead(card, langCode) { const readKey = langCode + "_read"; return card[readKey] || ""; }
+    
+    function speakText(text, langCode, buttonElement) {
+        if (currentUtterance) {
+            window.speechSynthesis.cancel();
+            currentUtterance = null;
+            if (currentSpeakButton) {
+                currentSpeakButton.innerHTML = "🔊 Səsləndir";
+                currentSpeakButton.classList.remove("stop-speak-btn");
+                currentSpeakButton.classList.add("speak-btn");
+                currentSpeakButton = null;
+            }
+            if (currentSpeakButton === buttonElement) return;
+        }
+        if (!window.speechSynthesis || !text) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        const langMap = { en:"en-US", ru:"ru-RU", de:"de-DE", es:"es-ES", pt:"pt-PT", tr:"tr-TR", zh:"zh-CN" };
+        utterance.lang = langMap[langCode] || "en-US";
+        utterance.rate = 0.9;
+        currentUtterance = utterance;
+        currentSpeakButton = buttonElement;
+        buttonElement.innerHTML = "⏹️ Stop";
+        buttonElement.classList.remove("speak-btn");
+        buttonElement.classList.add("stop-speak-btn");
+        utterance.onend = () => {
+            currentUtterance = null;
+            if (currentSpeakButton) {
+                currentSpeakButton.innerHTML = "🔊 Səsləndir";
+                currentSpeakButton.classList.remove("stop-speak-btn");
+                currentSpeakButton.classList.add("speak-btn");
+                currentSpeakButton = null;
+            }
+        };
+        utterance.onerror = () => {
+            currentUtterance = null;
+            if (currentSpeakButton) {
+                currentSpeakButton.innerHTML = "🔊 Səsləndir";
+                currentSpeakButton.classList.remove("stop-speak-btn");
+                currentSpeakButton.classList.add("speak-btn");
+                currentSpeakButton = null;
+            }
+        };
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    // DOM elements
+    const appMain = document.getElementById("appMain"), welcomeOverlay = document.getElementById("welcomeOverlay"), welcomeSelector = document.getElementById("welcomeLangSelector"), confirmLangBtn = document.getElementById("confirmLangBtn");
+    const customDropdownBtn = document.getElementById("customDropdownBtn"), dropdownMenu = document.getElementById("dropdownMenu"), selectedLangText = document.getElementById("selectedLangText");
+    const levelContainer = document.getElementById("levelFilterContainer"), categoryContainer = document.getElementById("categoryFilterContainer"), cardsContainer = document.getElementById("cardsContainer"), paginationContainer = document.getElementById("paginationContainer");
+    const favCountSpan = document.getElementById("favCountBadge"), knownCountSpan = document.getElementById("knownCount"), unknownCountSpan = document.getElementById("unknownCount");
+    const openKnownBtn = document.getElementById("openKnownModal"), openUnknownBtn = document.getElementById("openUnknownModal"), openFavBtn = document.getElementById("openFavModal");
+    const modalOverlay = document.getElementById("listModal"), modalTitle = document.getElementById("modalTitle"), modalListContainer = document.getElementById("modalListContainer"), modalClearBtn = document.getElementById("modalClearBtn"), modalCloseBtn = document.getElementById("modalCloseBtn");
+    const themeToggle = document.getElementById("themeToggle");
+    const addWordBtn = document.getElementById("addWordBtn"), newWordInput = document.getElementById("newWordInput"), newWordTranslation = document.getElementById("newWordTranslation");
+    let currentModalType = null;
+    
+    addWordBtn.addEventListener("click", async () => {
+        const azWord = newWordInput.value.trim();
+        const enWord = newWordTranslation.value.trim();
+        if (!azWord || !enWord) {
+            showStatus("Zəhmət olmasa həm Azərbaycanca, həm də İngiliscə söz daxil edin!", "error");
+            return;
+        }
+        showStatus("Söz əlavə olunur...", "success");
+        const success = await addWordToSupabase(azWord, enWord);
+        if (success) {
+            newWordInput.value = "";
+            newWordTranslation.value = "";
+            showStatus("✅ Söz uğurla əlavə edildi!", "success");
+        }
+    });
+    
+    function buildDropdown() { dropdownMenu.innerHTML = ''; languageOptions.forEach(opt => { const item = document.createElement('div'); item.className = `dropdown-item ${currentLang === opt.code ? 'selected' : ''}`; item.innerHTML = `<span class="lang-flag">${opt.flag}</span> <span>${opt.name}</span>`; item.addEventListener('click', () => { changeLanguage(opt.code); closeDropdown(); }); dropdownMenu.appendChild(item); }); }
+    function toggleDropdown() { dropdownMenu.classList.toggle('active'); }
+    function closeDropdown() { dropdownMenu.classList.remove('active'); }
+    function updateDropdownDisplay() { const selected = languageOptions.find(opt => opt.code === currentLang); if (selected) selectedLangText.innerHTML = `${selected.flag} ${selected.name}`; }
+    document.addEventListener('click', function(e) { const wrapper = document.getElementById('langDropdownWrapper'); if (wrapper && !wrapper.contains(e.target)) closeDropdown(); });
+    if (customDropdownBtn) customDropdownBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+    
+    function loadStorage() { try { let savedLang = localStorage.getItem("diloyren_lang"); if (savedLang && languageOptions.some(opt => opt.code === savedLang)) currentLang = savedLang; let fav = localStorage.getItem("diloyren_fav"); favoriteIds = new Set(fav ? JSON.parse(fav) : []); let known = localStorage.getItem("diloyren_known"); knownIds = new Set(known ? JSON.parse(known) : []); let unknown = localStorage.getItem("diloyren_unknown"); unknownIds = new Set(unknown ? JSON.parse(unknown) : []); } catch(e) {} updateCounters(); updateDropdownDisplay(); }
+    function saveLang() { localStorage.setItem("diloyren_lang", currentLang); updateDropdownDisplay(); }
+    function saveFav() { localStorage.setItem("diloyren_fav", JSON.stringify([...favoriteIds])); updateFavUI(); }
+    function saveKnown() { localStorage.setItem("diloyren_known", JSON.stringify([...knownIds])); updateCounters(); }
+    function saveUnknown() { localStorage.setItem("diloyren_unknown", JSON.stringify([...unknownIds])); updateCounters(); }
+    function updateCounters() { knownCountSpan.innerText = knownIds.size; unknownCountSpan.innerText = unknownIds.size; }
+    function updateFavUI() { favCountSpan.innerText = favoriteIds.size; }
+    function setKnown(id, e) { e.stopPropagation(); if(unknownIds.has(id)) unknownIds.delete(id); knownIds.add(id); saveKnown(); saveUnknown(); renderCards(); }
+    function setUnknown(id, e) { e.stopPropagation(); if(knownIds.has(id)) knownIds.delete(id); unknownIds.add(id); saveKnown(); saveUnknown(); renderCards(); }
+    function toggleFavorite(id, e) { e.stopPropagation(); if(favoriteIds.has(id)) favoriteIds.delete(id); else favoriteIds.add(id); saveFav(); renderCards(); }
+    function handleSpeak(card, langCode, e, button) { e.stopPropagation(); const text = getTranslationText(card, langCode); speakText(text, langCode, button); }
+    function clearKnown() { knownIds.clear(); saveKnown(); renderCards(); closeModal(); }
+    function clearUnknown() { unknownIds.clear(); saveUnknown(); renderCards(); closeModal(); }
+    function clearFav() { favoriteIds.clear(); saveFav(); renderCards(); closeModal(); }
+    function openListModal(type) { currentModalType = type; let title = "", items = []; if(type === 'known') { title = "✅ Bilirəm kartları"; items = Array.from(knownIds).map(id => wordsData.find(w => w.id === id)).filter(c => c); } else if(type === 'unknown') { title = "❌ Bilmirəm kartları"; items = Array.from(unknownIds).map(id => wordsData.find(w => w.id === id)).filter(c => c); } else if(type === 'fav') { title = "⭐ Sevimli kartlar"; items = Array.from(favoriteIds).map(id => wordsData.find(w => w.id === id)).filter(c => c); } modalTitle.innerText = title; if(items.length === 0) modalListContainer.innerHTML = `<div class="empty-list">📭 Heç bir kart yoxdur</div>`; else modalListContainer.innerHTML = items.map(card => `<div class="modal-list-item"><div><span>${escapeHtml(card.az)} → ${escapeHtml(getTranslationText(card, currentLang))}</span><br><small>${card.level} | ${card.category}</small></div></div>`).join(''); modalOverlay.classList.add("active"); }
+    function closeModal() { modalOverlay.classList.remove("active"); currentModalType = null; }
+    function handleClear() { if(currentModalType === 'known') clearKnown(); else if(currentModalType === 'unknown') clearUnknown(); else if(currentModalType === 'fav') clearFav(); closeModal(); }
+    function initTheme() { const saved = localStorage.getItem("diloyren_theme"); if(saved === "dark") { document.body.classList.add("dark"); themeToggle.innerHTML = "☀️"; } else { themeToggle.innerHTML = "🌙"; } }
+    function toggleTheme() { if(document.body.classList.contains("dark")) { document.body.classList.remove("dark"); localStorage.setItem("diloyren_theme", "light"); themeToggle.innerHTML = "🌙"; } else { document.body.classList.add("dark"); localStorage.setItem("diloyren_theme", "dark"); themeToggle.innerHTML = "☀️"; } }
+    function attachClickFlip(cardElement) { cardElement.addEventListener("click", (e) => { if(e.target.closest('.star-icon') || e.target.closest('.know-btn') || e.target.closest('.dontknow-btn') || e.target.closest('.speak-btn') || e.target.closest('.stop-speak-btn')) return; cardElement.classList.toggle('flipped'); }); }
+    function getAllCategoriesSorted() { const cats = [...new Set(wordsData.map(c => c.category))]; cats.sort(); return cats; }
+    function getFilteredCards() { let filtered = [...wordsData]; if(currentLevel !== "all") filtered = filtered.filter(c => c.level === currentLevel); if(currentCategory !== "all") filtered = filtered.filter(c => c.category === currentCategory); if(showFavoritesOnly) filtered = filtered.filter(c => favoriteIds.has(c.id)); return filtered; }
+    function renderPagination(totalItems) { const totalPages = Math.ceil(totalItems / itemsPerPage); paginationContainer.innerHTML = ''; if (totalPages <= 1) return; const prevBtn = document.createElement('button'); prevBtn.textContent = '← Əvvəl'; prevBtn.className = 'page-btn'; prevBtn.disabled = currentPage === 1; prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderCards(); } }; paginationContainer.appendChild(prevBtn); for (let i = 1; i <= Math.min(totalPages, 5); i++) { const btn = document.createElement('button'); btn.textContent = i; btn.className = `page-btn ${currentPage === i ? 'active' : ''}`; btn.onclick = () => { currentPage = i; renderCards(); }; paginationContainer.appendChild(btn); } const nextBtn = document.createElement('button'); nextBtn.textContent = 'Sonra →'; nextBtn.className = 'page-btn'; nextBtn.disabled = currentPage === totalPages; nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderCards(); } }; paginationContainer.appendChild(nextBtn); }
+    function renderCards() { const filtered = getFilteredCards(); const totalItems = filtered.length; const totalPages = Math.ceil(totalItems / itemsPerPage); if (currentPage > totalPages) currentPage = 1; const start = (currentPage - 1) * itemsPerPage; const end = start + itemsPerPage; const pageCards = filtered.slice(start, end); if (pageCards.length === 0) { cardsContainer.innerHTML = `<div class="empty-msg">📭 Kart yoxdur. Filtirləri dəyişin.</div>`; renderPagination(0); return; } cardsContainer.innerHTML = ""; pageCards.forEach(card => { const isFav = favoriteIds.has(card.id); const isKnown = knownIds.has(card.id); const isUnknown = unknownIds.has(card.id); const backText = getTranslationText(card, currentLang); const backRead = getTranslationRead(card, currentLang); const flipDiv = document.createElement("div"); flipDiv.className = "flip-card"; const inner = document.createElement("div"); inner.className = "flip-card-inner"; const front = document.createElement("div"); front.className = "card-front"; front.innerHTML = `<div class="top-info"><div class="left-info"><div class="category-badge">📁 ${escapeHtml(card.category)}</div><div class="level-badge">${card.level}</div></div></div><div style="flex:1; display:flex; flex-direction:column; justify-content:center;"><div class="main-word">${escapeHtml(card.az)}</div></div><div><div class="action-buttons"><button class="know-btn ${isKnown ? 'active-know' : ''}">✅ Bilirəm</button><button class="dontknow-btn ${isUnknown ? 'active-unknown' : ''}">❌ Bilmirəm</button></div></div>`; const back = document.createElement("div"); back.className = "card-back"; back.innerHTML = `<div><div class="main-word" style="font-size:1rem;">${escapeHtml(backText)}</div>${backRead ? `<div class="pronunciation">🔊 ${escapeHtml(backRead)}</div>` : ''}<button class="speak-btn" style="margin-top: 12px;">🔊 Səsləndir</button></div><div style="margin-top:12px; font-size:0.6rem; opacity:0.6;">📘 ${escapeHtml(card.az)}</div>`; inner.appendChild(front); inner.appendChild(back); flipDiv.appendChild(inner); const star = document.createElement("div"); star.className = `star-icon ${isFav ? "favorited" : ""}`; star.innerHTML = isFav ? "⭐" : "☆"; star.addEventListener("click", (e) => toggleFavorite(card.id, e)); flipDiv.appendChild(star); const knowBtn = front.querySelector(".know-btn"), dontBtn = front.querySelector(".dontknow-btn"); const speakBtn = back.querySelector(".speak-btn"); knowBtn.addEventListener("click", (e) => setKnown(card.id, e)); dontBtn.addEventListener("click", (e) => setUnknown(card.id, e)); speakBtn.addEventListener("click", (e) => { e.stopPropagation(); handleSpeak(card, currentLang, e, speakBtn); }); attachClickFlip(flipDiv); cardsContainer.appendChild(flipDiv); }); renderPagination(totalItems); }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+    function buildLevelButtons() { levelContainer.innerHTML = ''; const allBtn = document.createElement('button'); allBtn.className = `level-btn ${currentLevel === "all" ? "active" : ""}`; allBtn.innerText = "Bütün Levellər"; allBtn.onclick = () => { currentLevel = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; levelContainer.appendChild(allBtn); levelsOrder.forEach(lvl => { const btn = document.createElement('button'); btn.className = `level-btn ${currentLevel === lvl ? "active" : ""}`; btn.innerText = lvl; btn.onclick = () => { currentLevel = lvl; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; levelContainer.appendChild(btn); }); }
+    function buildCategoryButtons() { categoryContainer.innerHTML = ''; const allCat = document.createElement('button'); allCat.className = `level-btn ${currentCategory === "all" ? "active" : ""}`; allCat.innerText = "📌 Bütün Mövzular"; allCat.setAttribute("data-cat","all"); allCat.onclick = () => { currentCategory = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; categoryContainer.appendChild(allCat); getAllCategoriesSorted().forEach(cat => { const btn = document.createElement('button'); btn.className = `level-btn ${currentCategory === cat ? "active" : ""}`; btn.innerText = cat; btn.setAttribute("data-cat", cat); btn.onclick = () => { currentCategory = cat; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); renderCards(); }; categoryContainer.appendChild(btn); }); }
+    function updateActiveUI() { document.querySelectorAll("#levelFilterContainer .level-btn").forEach(btn => { const txt = btn.innerText; if((currentLevel === "all" && txt === "Bütün Levellər") || currentLevel === txt) btn.classList.add("active"); else btn.classList.remove("active"); }); document.querySelectorAll("#categoryFilterContainer .level-btn").forEach(btn => { const cat = btn.getAttribute("data-cat"); if((currentCategory === "all" && cat === "all") || currentCategory === cat) btn.classList.add("active"); else btn.classList.remove("active"); }); }
+    function changeLanguage(lang) { currentLang = lang; saveLang(); renderCards(); }
+    function initWelcome() { welcomeSelector.innerHTML = languageOptions.map(opt => `<div class="lang-option" data-lang="${opt.code}">${opt.flag} ${opt.name}</div>`).join(''); document.querySelectorAll(".lang-option").forEach(el => { el.addEventListener("click", () => { currentLang = el.dataset.lang; document.querySelectorAll(".lang-option").forEach(opt => opt.style.background = ""); el.style.background = "var(--accent)"; }); }); }
+    function startApp() { localStorage.setItem("diloyren_first_visit", "false"); saveLang(); welcomeOverlay.classList.remove("active"); appMain.style.display = "block"; loadFromSupabase(); }
+    function checkFirstVisit() { const firstVisit = localStorage.getItem("diloyren_first_visit"); if (!firstVisit) { initWelcome(); welcomeOverlay.classList.add("active"); appMain.style.display = "none"; } else { appMain.style.display = "block"; welcomeOverlay.classList.remove("active"); loadFromSupabase(); } }
+    confirmLangBtn.addEventListener("click", startApp); openKnownBtn.addEventListener("click", () => openListModal('known')); openUnknownBtn.addEventListener("click", () => openListModal('unknown')); openFavBtn.addEventListener("click", () => { showFavoritesOnly = true; currentPage = 1; renderCards(); }); modalClearBtn.addEventListener("click", handleClear); modalCloseBtn.addEventListener("click", closeModal); modalOverlay.addEventListener("click", (e) => { if(e.target === modalOverlay) closeModal(); }); themeToggle.addEventListener("click", toggleTheme);
+    function init() { loadStorage(); initTheme(); buildLevelButtons(); buildCategoryButtons(); currentLevel = "all"; currentCategory = "all"; showFavoritesOnly = false; currentPage = 1; updateActiveUI(); buildDropdown(); updateDropdownDisplay(); checkFirstVisit(); }
+    init();
+</script>
+</body>
+</html>
